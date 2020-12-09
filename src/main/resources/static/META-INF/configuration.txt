@@ -1,0 +1,6 @@
+activeMQ中的传输的数据为json数据，可选项为：
+status：消息属性，可选项（消息message，通知information）
+name:发出该信息的用户名
+date:发出时间
+message:消息内容
+action:行动，当status为information时才生效，可选项（login，logout）

@@ -1,0 +1,75 @@
+const name = $.cookie('user');
+    var socket = new WebSocket("ws://localhost:8080/socket/" + name);
+    socket.onopen = function (event) {
+    }
+
+    socket.onmessage = function (event) {
+        var format;
+        var msg=JSON.parse(event.data);
+        if (msg.name==name){
+            format="<h4 style='text-align: right' class='text-light'>["+msg.date+"]"+msg.name+":"+msg.message+"</h4>";
+        }
+        else{
+            format="<h4 class='text-light'>["+msg.date+"]"+msg.name+":"+msg.message+"</h4>";
+        }
+        $("#showContent").append(format);
+    }
+
+    socket.onclose = function (event) {
+        if (socket != null) {
+            socket.close();
+            socket = null;
+            alert("断开连接，请重新登录");
+            window.location.href="/";
+        }
+    }
+    //监听异常
+    socket.onerror = function (event) {
+        alert("请重新登录");
+        window.location.href="/";
+    }
+    $("#button").click(function (){
+        var data=toJsonData(name,$("#chatContent").val());
+        $("#chatContent").val("");
+        socket.send(data);
+    });
+    $(function () {
+            $("#spanUser").append(name);
+    });
+
+    ----------------------------------------------------------------------------------
+    ----------------------------------------------------------------------------------
+    ----------------------------------------------------------------------------------
+
+      const name = $.cookie('user');
+        const destination="chatTopic";
+        var client=Stomp.client("ws://localhost:61614/stomp");
+        var headers = {
+            login: 'admin',
+            passcode: 'admin',
+            'client-id': name
+        };
+        var subscription;
+        var onmessage=function (message){
+            var format;
+            var msg=JSON.parse(message.body);
+            if (msg.name==name){
+                format="<h4 style='text-align: right' class='text-light'>["+msg.date+"]"+msg.name+":"+msg.message+"</h4>";
+            }
+            else{
+                format="<h4 class='text-light'>["+msg.date+"]"+msg.name+":"+msg.message+"</h4>";
+            }
+            $("#showContent").append(format);
+        }
+        var onconnect=function (frame){
+          subscription= client.subscribe(destination,onmessage());
+        };
+        var errorConnect=function (frame){
+            alert("连接失败");
+        };
+
+        client.connect(headers,onconnect,errorConnect);
+
+        client.debug=function (str){
+            console.log(str+"\n");
+        }

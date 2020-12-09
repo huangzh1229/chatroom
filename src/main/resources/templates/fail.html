@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" th:src="@{/webjars/jquery/3.5.1/jquery.js}"></script>
+</head>
+<body>
+<h1></h1>
+
+<a  href="/main.html">提问页面</a>
+<input type="text">
+<button>点击</button>
+<label  id="label1">11111</label>
+<script>
+    $(function (){
+            $("button").click(function (){
+                var text=$("input").val();
+                var x="'#"+text+"'";
+                alert(x);
+                alert($("#"+text+"").text());
+            })
+    })
+</script>
+</body>
+</html>

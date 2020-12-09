@@ -1,0 +1,107 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>单人聊天室</title>
+    <script type="text/javascript" src="/webjars/jquery/3.5.1/jquery.js"></script>
+    <script type="text/javascript" src="/webjars/jquery-cookie/1.4.1-1/jquery.cookie.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/4.5.2/css/bootstrap.css">
+    <link rel="stylesheet" href="/asserts/css/reset.css">
+    <script type="text/javascript" src="/webjars/bootstrap/4.5.2/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/webjars/feather-icons/4.28.0/dist/feather.js"></script>
+    <script type="text/javascript" src="/asserts/js/base.js"></script>
+    <script type="text/javascript" src="/asserts/js/stomp.js"></script>
+    <script type="text/javascript" src="/asserts/js/jquery.qqFace.js"></script>
+
+    <style>
+        ul {
+
+        }
+    </style>
+</head>
+<body>
+<h1 style="text-align: center">[[${user1}]]和[[${user2}]]的聊天</h1>
+<div class="container-fluid">
+    <div class="row" style="height: 450px">
+        <div class="col-lg-10 col-xl-10 ">
+            <div class="ml-5 bg-primary" id="showContent"
+                 style="width: 997px;height: 432px;overflow-y: auto">
+            </div>
+        </div>
+        <div class="col-lg-2 col-xl-2 px-0">
+            <p><span id="spanUser">当前用户:</span>
+            </p>
+
+        </div>
+    </div>
+
+    <div class="row" style="height: 100px;">
+        <div class="col-lg-7">
+            <textarea rows="4" cols="50" class="mr-0" id="chatContent" style="resize: none;float: right" autofocus></textarea>
+            <span data-feather="smile" style="float: right" class="emotion"></span>
+        </div>
+        <div class="col-lg-5" style="height: 100px;">
+            <button id="button" class="ml-0 mt-5 btn btn-success" name="button">发送</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" th:ininle="javascript">
+    const name = $.cookie('user');
+    /* 发送队列(左边永远是发送者，右边是接受者) */
+    const sendDestination = "/queque/[[${user1}]]-[[${user2}]]-queue";
+    /* 接收队列 */
+    const reviceDestination = "/queque/[[${user2}]]-[[${user1}]]-queue";
+    var client = Stomp.client("ws://localhost:61614/stomp");
+    var subscription;
+    function replace_em(str){
+        str = str.replace(/\</g,'&lt;');
+        str = str.replace(/\>/g,'&gt;');
+        str = str.replace(/\n/g,'<br/>');
+        str = str.replace(/\[em_([0-9]*)\]/g,'<img src="/asserts/arclist/$1.gif" border="0" />');
+        return str;
+
+    }
+    var onmessage = function (message) {
+        var format;
+        var data = JSON.parse(message.body);
+        /* 解码后的消息 */
+        var afterDecodeMessage = replace_em(unescape(data.message));
+                format = "<h4 class='text-light'>[" + data.date + "]" + data.name + ":" + afterDecodeMessage + "</h4>";
+        $("#showContent").append(format);
+    };
+
+
+    var onconnect = function (frame) {
+        subscription = client.subscribe(reviceDestination, onmessage, {
+            id: name,
+            "ack": "auto",
+        });
+    };
+    var errorConnect = function (frame) {
+        console.log(frame);
+        alert("连接失败");
+    };
+    client.debug = function (str) {
+        console.log(str + "\n");
+
+    }
+    $("#button").click(function () {
+        var data = toJsonData(name, escape($("#chatContent").val()), "message");
+        var jsondata=JSON.parse(data);
+        var format = "<h4 style='text-align: right' class='text-light'>[" + jsondata.date + "]" + name + ":" + replace_em($("#chatContent").val()) + "</h4>";
+        $("#showContent").append(format);
+        $("#chatContent").val("");
+        client.send(sendDestination, {}, data);
+    });
+    $(function (){
+        $("#showContent h4").each(function (){
+            $(this).html(replace_em($(this).html()));
+        });
+        $('.emotion').qqFace({
+            assign:'chatContent', //给输入框赋值
+            path:'/asserts/arclist/'    //表情图片存放的路径
+        });
+        client.connect({"login": "admin", "passcode": "admin"}, onconnect, errorConnect, name);
+        $("#spanUser").append(name);
+    })
+</script>
+</body>
+</html>

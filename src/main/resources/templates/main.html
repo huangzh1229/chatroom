@@ -1,0 +1,162 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>多人聊天室</title>
+    <script type="text/javascript" src="/webjars/jquery/3.5.1/jquery.js"></script>
+    <script type="text/javascript" src="/webjars/jquery-cookie/1.4.1-1/jquery.cookie.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/4.5.2/css/bootstrap.css">
+    <link rel="stylesheet" href="/asserts/css/reset.css">
+    <script type="text/javascript" src="/webjars/bootstrap/4.5.2/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/webjars/feather-icons/4.28.0/dist/feather.js"></script>
+    <script type="text/javascript" src="/asserts/js/base.js"></script>
+    <script type="text/javascript" src="/asserts/js/stomp.js"></script>
+    <script type="text/javascript" src="/asserts/js/jquery.qqFace.js"></script>
+    <style>
+
+    </style>
+</head>
+<body>
+<h1 style="text-align: center">多人聊天室</h1>
+<div class="container-fluid">
+    <div class="row" style="height: 450px">
+        <div class="col-lg-10 col-xl-10 ">
+            <div class="ml-5 bg-dark" id="showContent"
+                 style="width: 997px;height: 432px;overflow-y: auto">
+                <h4 class="text-light" th:if="${application.messageList.size()!=0}"
+                    th:each="message:${application.messageList}"
+                    th:text="${message}"></h4>
+            </div>
+        </div>
+        <div class="col-lg-2 col-xl-2 px-0">
+            <p><span id="spanUser">当前用户:</span>
+                <button id="btnlogout" class="ml-4 btn btn-primary btn-sm">
+                    <span data-feather="log-out" id="loginOut"></span>注销
+                </button>
+            </p>
+            <p><span>聊天室当前在线用户</span></p>
+            <div style="overflow-y: auto">
+                <ul id="userList">
+                    <li style="color: red" th:if="${application.userSet.size()!=0}"
+                        th:each="user:${application.userSet}" th:text="${user}"
+                        th:id="${user}"></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="height: 100px;">
+        <div class="col-lg-7">
+            <textarea rows="4" cols="50" class="mr-0" id="chatContent" style="resize: none;float: right"
+                      autofocus></textarea>
+            <span data-feather="smile" style="float: right" class="emotion"></span>
+
+        </div>
+        <div class="col-lg-5" style="height: 100px;">
+            <button id="button" class="ml-0 mt-5 btn btn-success" name="button">发送</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" th:ininle="javascript">
+    const name = $.cookie('user');
+    const destination = "/topic/chatroom";
+    var client = Stomp.client("ws://localhost:61614/stomp");
+    var subscription;
+
+    function replace_em(str) {
+        str = str.replace(/\</g, '&lt;');
+        str = str.replace(/\>/g, '&gt;');
+        str = str.replace(/\n/g, '<br/>');
+        str = str.replace(/\[em_([0-9]*)\]/g, '<img src="/asserts/arclist/$1.gif" border="0" />');
+        return str;
+
+    }
+
+    var onmessage = function (message) {
+        var format;
+        var data = JSON.parse(message.body);
+        /* 解码后的消息 */
+        var afterDecodeMessage = replace_em(unescape(data.message));
+        //message是聊天消息
+        if (data.status == "message") {
+            if (data.name == name) {
+                format = "<h4 style='text-align: right' class='text-light'>[" + data.date + "]" + data.name + ":" + afterDecodeMessage + "</h4>";
+            } else {
+                format = "<h4 class='text-light'>[" + data.date + "]" + data.name + ":" + afterDecodeMessage + "</h4>";
+            }
+        }
+        //information是通知
+        else if (data.status == "information") {
+            format = "<h4 class='text-light' style='text-align: center'>-----" + afterDecodeMessage + "-----</h4>";
+            if (data.action == "login" && $("#" + data.name + "").length <= 0) {
+                $("#userList").append("<li ondblclick=\"doubleclick('" + name + "','" + data.name + "')\" style='color: #ff0000' id='" + data.name + "'>" + data.name + "</li>")
+            } else if (data.action == "logout") {
+                $("#userList li").each(function () {
+                    if (this.id == data.name) {
+                        $(this).remove();
+                    }
+                });
+            }
+        }
+        $("#showContent").append(format);
+    };
+
+    var onconnect = function (frame) {
+        subscription = client.subscribe(destination, onmessage, {
+            id: name,
+            "ack": "auto",
+            "persistent": true,
+            "activemq.subscriptionName": name
+        });
+    };
+    var errorConnect = function (frame) {
+        console.log(frame);
+        alert("连接失败");
+    };
+    client.debug = function (str) {
+        console.log(str + "\n");
+
+    }
+    $("#button").click(function () {
+        if ($("#chatContent").val().trim() != "") {
+            var data = toJsonData(name, escape($("#chatContent").val().trim()), "message");
+            $("#chatContent").val("");
+            client.send(destination, {}, data);
+        } else {
+            alert("请输入");
+        }
+
+    });
+    $("#btnlogout").click(function () {
+        client.disconnect(function () {
+            $.ajax({
+                url: "/loginOut",
+                type: "get",
+                success(data) {
+                    window.location.href = "/login.html";
+                }
+            })
+        })
+    })
+    $(function () {
+        $("#showContent h4").each(function () {
+            $(this).html(replace_em($(this).html()));
+        });
+        $('.emotion').qqFace({
+            assign: 'chatContent', //给输入框赋值
+            path: '/asserts/arclist/'    //表情图片存放的路径
+        });
+
+        $("#userList li").on('dblclick', function (event) {
+                if ($(this).attr("id") == name) {
+                    event.preventDefault();
+                } else {
+                    window.open("/chat?user1=" + name + "&user2=" + $(this).attr("id"));
+                }
+            }
+        );
+        client.connect({"login": "admin", "passcode": "admin", "client-id": name}, onconnect, errorConnect, name);
+        $("#spanUser").append(name);
+    });
+</script>
+</body>
+</html>
