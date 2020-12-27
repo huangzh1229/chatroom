@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Enumeration;
 
 /**
  * @author huangzhuo
@@ -31,12 +35,15 @@ public class MainController {
     public void setUserService(UserService userService) {
         this.userService = userService;
     }
-
+    @GetMapping("/")
+    public String toLoginPage(){
+        return "redirect:/login.html";
+    }
     /**
      * 登录业务
      */
     @PostMapping(value = "/login")
-    public String login(@RequestParam String user, HttpServletResponse response) throws Exception {
+    public String login(@RequestParam String user, HttpServletResponse response, HttpSession session) throws Exception {
         String localUser = user.trim();
         /** 是否已经注册过 */
         if (userService.userExist(localUser)) {
@@ -52,6 +59,8 @@ public class MainController {
         logger.info("用户上线");
         Cookie cookie = CookieFactory.getCookie("user", localUser);
         response.addCookie(cookie);
+        /** 本机ip地址 */
+       session.setAttribute("ip",getLocalIp());
         return "redirect:/main.html";
 
     }
@@ -79,7 +88,7 @@ public class MainController {
      * 处理单人聊天的请求
      */
     @GetMapping(value = "/chat")
-    public String toChatPage(@RequestParam String user1, @RequestParam String user2, Model model) {
+    public String toChatPage(@RequestParam String user1, @RequestParam String user2, Model model) throws Exception{
         model.addAttribute("user1", user1);
         model.addAttribute("user2", user2);
         if (user1.hashCode() > user2.hashCode()) {
@@ -88,6 +97,23 @@ public class MainController {
             model.addAttribute("queueName", user1 + "-" + user2);
         }
         return "chat";
+    }
+
+  private static String getLocalIp() throws Exception {
+        Enumeration<NetworkInterface> allNetworkInterfaces = NetworkInterface.getNetworkInterfaces();
+        while (allNetworkInterfaces.hasMoreElements()) {
+            NetworkInterface nif = allNetworkInterfaces.nextElement();
+            if (nif.getName().startsWith("wlan")) {
+                Enumeration<InetAddress> addresses = nif.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress address = addresses.nextElement();
+                    if (address.getAddress().length == 4) {
+                        return address.getHostAddress();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

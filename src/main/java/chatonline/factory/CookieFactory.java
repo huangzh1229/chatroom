@@ -26,7 +26,6 @@ public class CookieFactory {
      */
     public static Cookie getCookie(String name, String value)throws Exception {
         Cookie cookie = new Cookie(name, value);
-        cookie.setDomain("localhost");
         cookie.setMaxAge(COOKIE_MAX_AGE);
         cookie.setPath(COOKIE_PATH);
         return cookie;
