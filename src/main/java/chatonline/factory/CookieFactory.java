@@ -11,11 +11,12 @@ import java.net.URLEncoder;
 public class CookieFactory {
     /**
      * 最长生存时间（正数） 秒为单位  0为删除  负数为保存在浏览器内存中，关闭浏览器即删除
+     * 默认一小时
      * 开发时设置为0
      * 上线时设置为3600
      */
 
-    private static final int COOKIE_MAX_AGE = -1;
+    private static final int COOKIE_MAX_AGE = 60*60;
     /**
      * cookie的访问路径，就是当某个请求路径的包含该路径时，才会带上该cookie
      */
@@ -30,6 +31,9 @@ public class CookieFactory {
         cookie.setPath(COOKIE_PATH);
         return cookie;
     }
+    /**
+    * 删除某个指定cookie
+    * */
     public static Cookie destroyCookie(Cookie cookie){
             cookie.setMaxAge(0);
             return cookie;

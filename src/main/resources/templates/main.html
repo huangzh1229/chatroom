@@ -57,10 +57,7 @@
 </div>
 
 <script type="text/javascript" th:ininle="javascript">
-    const name = $.cookie('user');
-    const destination = "/topic/chatroom";
-    var client = Stomp.client("ws://[[${session.ip}]]:61614/stomp");
-    var subscription;
+    const username = $.cookie('user');
 
     function replace_em(str) {
         str = str.replace(/\</g, '&lt;');

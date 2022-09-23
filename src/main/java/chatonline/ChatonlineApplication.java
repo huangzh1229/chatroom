@@ -7,7 +7,7 @@ import org.springframework.jms.annotation.EnableJms;
 
 /** 多人聊天采用websocket技术，将信息放入主题中，单人聊天采用activeMQ的PointToPoint模式  */
 @SpringBootApplication
-@EnableJms
+
 @MapperScan(value = "chatonline.mapper")
 public class ChatonlineApplication {
 

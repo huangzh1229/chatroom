@@ -4,6 +4,7 @@ import chatonline.Service.MessageService;
 import chatonline.Service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thymeleaf.spring5.context.SpringContextUtils;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -18,6 +19,7 @@ public class ContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+
             logger.info("-----ServletContext容器创建了-----");
             sce.getServletContext().setAttribute("userSet", UserService.getUserSet());
             sce.getServletContext().setAttribute("messageList", MessageService.getMessageList());

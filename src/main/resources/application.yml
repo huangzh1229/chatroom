@@ -10,21 +10,11 @@ server:
 spring:
   thymeleaf:
     cache: false
-  activemq:
-    broker-url: tcp://localhost:61616
-    user: admin
-    password: admin
-    pool:
-      enabled: true
-      max-connections: 10
   datasource:
-    password: 123456
-    url: jdbc:mysql://localhost:3306/activemq?useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+    password: Huangzhuo2000
+    url: jdbc:mysql://111.230.187.245:29733/dynamicweb?useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-  jms:
-    pub-sub-domain: true
-
-MainTopic: chatroom
-
-
+mybatis:
+  configuration:
+    map-underscore-to-camel-case:  true

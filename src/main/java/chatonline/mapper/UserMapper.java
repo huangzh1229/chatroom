@@ -1,5 +1,6 @@
 package chatonline.mapper;
 
+import chatonline.entity.Users;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
@@ -11,11 +12,12 @@ import org.apache.ibatis.annotations.Select;
 
 public interface UserMapper {
 
-    @Select(value = "select user from user where user=#{user}")
-    String getUser(String user);
+    @Select(value = "select id,username,password from user where username=#{username}")
+    Users getUserByUsername(String username);
 
-    @Insert(value = "insert into user(user) value(#{user})")
-    boolean insert(String user);
+    @Insert(value = "insert into user(username,password) value(#{username},#{password})")
+    boolean insert(Users user);
+
 
 
 }

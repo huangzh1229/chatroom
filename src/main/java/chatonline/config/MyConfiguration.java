@@ -36,7 +36,7 @@ public class MyConfiguration implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new Interceptor())
                 .addPathPatterns("/**")
-                .excludePathPatterns(Arrays.asList("/asserts/**", "/webjars/**","/error/**"));
+                .excludePathPatterns(Arrays.asList("/asserts/**", "/webjars/**","/error/**","/login.html","logout","/login"));
     }
 
     @Bean
